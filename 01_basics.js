@@ -1,4 +1,11 @@
 /**
+ * Diving Deeper with ES6 Generators
+ */
+
+// Remember: JS is single threaded.  Even web workers take turns, don't run
+// in multiple threads.
+
+/**
  * Generator is a new breed of function.
  * They work differently than functions in terms of how they run to completion.
  */
