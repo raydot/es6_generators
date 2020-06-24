@@ -3,6 +3,8 @@
  * They work differently than functions in terms of how they run to completion.
  */
 
+const { setupMaster } = require('cluster');
+
 // Traditional function:
 setTimeout(function () {
   console.log('hello world');
@@ -63,10 +65,10 @@ function* bar() {
 
 // Generator as iterator:
 function* genAsIterator() {
-  yield 1;
+  yield 1; // or whatever
   yield 2;
   yield 3;
-  yield 3;
+  yield 4;
   yield 5;
 }
 
@@ -89,3 +91,60 @@ console.log(iterator.next()); // {value: 5, done: false}
 // Iterated all the way through the yields, but still not done!
 
 console.log(iterator.next()); // {value: undefined, done: true}
+
+// Can return be used from generator?
+function* canUseReturn() {
+  yield 1;
+  return 2;
+}
+
+let curVar = canUseReturn();
+
+console.log(curVar.next()); // { value: 1, done: false }
+console.log(curVar.next()); // { value: 2, done: true } value comes from return
+
+// BUT: Shouldn't rely on this because final return value might be skipped or
+// thrown away.
+
+// Send messages into and out of a generator:
+console.log('***SUPER GENERATOR***');
+function* superGenerator(x) {
+  let y = 2 * (yield x + 1);
+  let z = yield y / 3;
+  return x + y + z;
+}
+
+let sgVar = superGenerator(5);
+
+console.log(sgVar.next()); // { value: 6, done: false } 6 from yield x + 1
+console.log(sgVar.next(12)); // { value: 8, done: false } 8 from yield y / 3
+console.log(sgVar.next(13)); // { value: 42, done: true }  5 + 24 + 13 = 42
+
+// *** FOR...OF ***
+console.log('*** FOR...OF ***');
+
+// ES6 provides direct support for running iterators to completion via
+// for...of which runs until the function returns "done: true".  Once
+// done is true, the loop iteration stops and that's it.
+
+function* forOfLoop() {
+  yield 1;
+  yield 2;
+  yield 3;
+  yield 4;
+  yield 5;
+  return 6;
+}
+
+let v;
+
+for (v of forOfLoop()) {
+  console.log(v); // 1 2 3 4 5
+}
+
+console.log(v); // v is still 5
+
+// Questions still to be answered:
+// 1.  How does error handling work?
+// 2.  Can one generator call another?
+// 3.  How does async work with generators?
